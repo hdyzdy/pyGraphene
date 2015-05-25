@@ -43,6 +43,6 @@ Temporary Items
 .apdisk
 
 # pyGraphene output files
-.xyz
-.p
-.pyc
+*.xyz
+*.p
+*.pyc
