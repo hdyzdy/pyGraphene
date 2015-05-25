@@ -25,7 +25,7 @@ class pyGNode:
         p4 = p1 + 1.45*v4u
         p5 = p4 + 1.3*v4u
         # print v4,v4u
-        print p4,p5
+        # print p4,p5
         return (p4, p5)
 
     def setR6pos(self,node2,node3,node4):

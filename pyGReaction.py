@@ -23,10 +23,10 @@ class pyGReaction:
                                 pyGNe.nodes[ip2])
         pyGNe.nodes.append(pyGNode(pos=pos1new,
                                    cns=[i_0,pyGNe.nC+1],
-                                   ncn='H',type='C'))
+                                   ncn='H',type='C3'))
         pyGNe.nodes.append(pyGNode(pos=pos2new,
                                    cns=[pyGNe.nC],
-                                   ncn='H2',type='C')) 
+                                   ncn='H2',type='C4')) 
         pyGNe.nodes[i_0].type = type0
         pyGNe.nodes[i_0].ncn = 'C2H3' 
         pyGNe.nodes[i_0].cns.append(pyGNe.nC)
@@ -376,18 +376,22 @@ class pyGR_CsmtCsR5H(pyGReaction):
         siteID = pyGNe.edge.idStrings[kEdge].split('_')
         siteDir  = pyGNe.edge.directions[kEdge]
         if (re.match(r'S1A1H',siteID[1]) and re.match(r'S1A1H',siteID[2])): #Both sides are boat
+            # print siteID
             if random.random() > 0.5: #Go up
                 side = +1
             else:                        #Go down
                 side = -1
         elif re.match(r'S1A1H',siteID[1]): #First side is boat 
+            # print siteID
             side = siteDir * -1        
         elif re.match(r'S1A1H',siteID[2]): #Second side is boat
+            # print siteID
             side = siteDir * +1
         else:
             raise ValueError('Invalid type for adsorbing 5-member ring.')
         kEdge = self.adsorb5zigzag(pyGNe,kEdge,side,'H','H2')
         pyGNe.classifyEdge()
+        # print pyGNe.edge.idStrings[kEdge]
         return kEdge
     def rate(self,pyGEn):
         T = pyGEn.temperature
@@ -1884,7 +1888,7 @@ class pyGR_CsmtCsC2H3(pyGReaction):
     def apply(self,pyGNe,kEdge):
         pyGR_CsmtCsC2H3.count += 1
         print 'haha', pyGR_CsmtCsC2H3.count
-        kEdge = self.CAHM(pyGNe,kEdge,'A1')
+        kEdge = self.CAHM(pyGNe,kEdge,'S1')
         # kNode = pyGNe.edge.nodes[kEdge]     
         pyGNe.classifyEdge()
         # pyGNe.nCCAHM += 2

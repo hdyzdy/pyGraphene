@@ -67,13 +67,12 @@ class pyGSimulation():
                 self.reactionRates[m] = self.reactions[m].rate(self.environments[kEnv])
                 # print "m=",m,"reactionRate=",self.reactionRates[m]
 
+        ismolecular = True 
         for k in range(self.networks[-1].edge.length):
             idStr = self.networks[-1].edge.idStrings[k]
             if '-' in idStr:
                 ismolecular = False
                 break
-            else:
-                ismolecular = True
 
         #Determine tNext for each site
         tstep = numpy.Inf
@@ -97,7 +96,7 @@ class pyGSimulation():
                         #        print applicableReactions
                         else:
                             # print "wrong in"
-                            if self.reactions[m].isApplicable(idStr) and ismolecular == True: #and self.nC[-1]>90:
+                            if self.reactions[m].isApplicable(idStr) and ismolecular == True: #and self.nC[-1]>100:
                                print "ismolecular!"
                                applicableReactions.append(m)
 
@@ -133,7 +132,8 @@ class pyGSimulation():
         if makeCopies: self.networks.append(deepcopy(self.networks[-1])) 
         reactionNumber = self.reactions[applicableReactions[reactionChosen]].number
         reactionName = self.reactions[applicableReactions[reactionChosen]].name
-        print "reaction.number=",reactionNumber,"reaction.name=",reactionName
+        # if reactionNumber==3:
+            # print "reaction.number=",reactionNumber,"reaction.name=",reactionName
         try:
             kEdge = self.reactions[applicableReactions[reactionChosen]].apply(self.networks[-1],kEdge)
         except Exception, e:
@@ -209,11 +209,12 @@ class pyGSimulation():
             if evoStatus < 0:
                 if (outputGeos): self.networks[-1].toXYZ(title=str(self.time[-1]),append=True)
                 break
-            elif evoStatus == 2 or ((self.nR6[-1]-self.nR6[-2]) > 0):
-                if doOpt:
+            elif evoStatus == 2 or ((self.nR6[-1]-self.nR6[-2]) > 0) or (self.nC[-1]-self.nC[-2] > 0):
+                if doOpt: 
                     if (self.networks[-1].isPlanar and re.search(r'^.*R5S.*t',self.reactionsApplied[-1][1])):
                         firstCurve = True
-                    else: firstCurve = False 
+                    else: firstCurve = False
+                    print doOpt 
                     geoStatus = self.networks[-1].checkGeo(optNodes=[self.networks[-1].edge.nodes[kEdge]],
                                                            promoteCurvature=firstCurve,loose=False,noFail=False)
                     if geoStatus < 0:
@@ -222,6 +223,9 @@ class pyGSimulation():
                 #Cheating to reduce number of outputs
                 if (outputGeos): self.networks[-1].toXYZ(title=str(self.time[-1]),append=True,
                                                                        filename=(self.name+'.xyz'))
+        # self.networks[-1].plot()
+        # plt.show()
+
 
     def calcRxnCounts(self,rxns=None,plot=False):
         if rxns is None:
@@ -254,6 +258,7 @@ if __name__ == '__main__':
     pgs = pyGSimulation(network=pgn,envs=[pyGEnvironment(temp=2500)])
     startTime = time.time()
     pgs.run(endMethod='time',endValue=0.0005,outputGeos=False,doOpt=True,debug=False)
+
     #pgs.run(endMethod='steps',endValue=119,outputGeos=False,doOpt=True,debug=True)
 #    pgs.networks[-1].toTinker(eRMS=0.5,optNodes=pgs.networks[-1].edge.nodes)
     totalTime = time.time() - startTime
