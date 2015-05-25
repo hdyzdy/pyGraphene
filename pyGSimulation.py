@@ -39,35 +39,70 @@ class pyGSimulation():
         #Determine where we are in the specified Time/Species conc history
         #and update environment
         if len(self.time) > 1:
+            #print "branch1 self.time",self.time
             for m in range(len(self.t_env)):
                 if self.time[-2] >= self.t_env[m]:
                     kEnvOld = m
+                    # print "branch1 kEnvOld",kEnvOld
+                    # print "branch1 t_env[m]",self.t_env[m],"m=",m
                 if self.time[-1] >= self.t_env[m]:
+                    # print "hi!"
                     kEnv = m
+                    # print "kEnv=",kEnv,"m=",m
                     break
         else:
+            # print "branch2 self.time",self.time
             kEnvOld = -1
             for m in range(len(self.t_env)):
                 if self.time[-1] >= self.t_env[m]:
                     kEnv = m
+                    # print "branch2 kEnv",kEnv
                     break
         #Update reaction rates (only if needed)
         if not kEnv == kEnvOld:
+            # print "reactionNumbers=",len(self.reactions)
             for m in range(len(self.reactions)):
+                # if self.reactions[m].number == 43 and self.nC[-1] < 50:
+                #     continue
                 self.reactionRates[m] = self.reactions[m].rate(self.environments[kEnv])
+                # print "m=",m,"reactionRate=",self.reactionRates[m]
+
+        for k in range(self.networks[-1].edge.length):
+            idStr = self.networks[-1].edge.idStrings[k]
+            if '-' in idStr:
+                ismolecular = False
+                break
+            else:
+                ismolecular = True
+
         #Determine tNext for each site
         tstep = numpy.Inf
         for k in range(self.networks[-1].edge.length):
-            #Inactive nodes have idStrings == ''
             idStr = self.networks[-1].edge.idStrings[k]
+            #Inactive nodes have idStrings == ''
             if idStr:
                 #Identify applicable reactions for an unknown site
                 if not (idStr in self.reactApplyDict):
                     applicableReactions = []
                     for m in range(len(self.reactions)):
-                        if self.reactions[m].isApplicable(idStr):
-                            applicableReactions.append(m)
+                        # me = self.reactions[m] #reaction index
+                        #if self.reactions[m].number == 43 and self.nC[-1] < 50:
+                        #     continue
+                        # if self.reactions[m].isApplicable(idStr):
+                        #        applicableReactions.append(m)
+
+                        if self.reactions[m].number != 43:
+                            if self.reactions[m].isApplicable(idStr):
+                               applicableReactions.append(m)
+                        #        print applicableReactions
+                        else:
+                            # print "wrong in"
+                            if self.reactions[m].isApplicable(idStr) and ismolecular == True: #and self.nC[-1]>90:
+                               print "ismolecular!"
+                               applicableReactions.append(m)
+
                     self.reactApplyDict[idStr] = applicableReactions
+                    # print "k=",k,"idStr=",idStr,"applicableReactions=",applicableReactions
                 netRate = 0
                 applicableReactions = self.reactApplyDict[idStr]
                 #Calculate timesteps for each site
@@ -78,6 +113,7 @@ class pyGSimulation():
                     if tmptstep < tstep:
                         tstep = tmptstep
                         kEdge = k
+                        # print "kEdge=",kEdge
                         netRateApply = netRate
                         idStrApply = idStr
         if tstep == numpy.Inf:
@@ -97,6 +133,7 @@ class pyGSimulation():
         if makeCopies: self.networks.append(deepcopy(self.networks[-1])) 
         reactionNumber = self.reactions[applicableReactions[reactionChosen]].number
         reactionName = self.reactions[applicableReactions[reactionChosen]].name
+        print "reaction.number=",reactionNumber,"reaction.name=",reactionName
         try:
             kEdge = self.reactions[applicableReactions[reactionChosen]].apply(self.networks[-1],kEdge)
         except Exception, e:
@@ -123,6 +160,9 @@ class pyGSimulation():
         self.randState = random.getstate()
         self.nR5.append(self.networks[-1].nR5)
         self.nR6.append(self.networks[-1].nR6)
+        # self.nC.append(self.networks[-1].nC)
+        # tmporarily modification for the CAHM addition
+        # self.nC.append(self.networks[-1].nC+self.networks[-1].nCCAHM)
         self.nC.append(self.networks[-1].nC)
         self.siteCounts.append(self.networks[-1].countSites())
         if re.search(r'R[5,6]B',reactionName): return (2,kEdge)

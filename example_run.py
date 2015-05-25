@@ -10,20 +10,19 @@ import matplotlib
 matplotlib.use('Agg')
 from pyGSimSet import *
 
-simName = 'pc7_BC_1500'
-
+simName = 'linear20_BC_1500'
 #The starting substrate
 #Change basetype and nrings as appropriate
-pgn = pyGNetwork(baseType='pc',nRings=7)
+pgn = pyGNetwork(baseType='linear',nRings=20)
 
 #Excluded reactions: numbers match those from JPC paper
 #exr = [14,15,16,17,18,19,20,22,29,30,31,32,33,34,35,36,37,38,39,41] #E1
 #exr = [35,36,37,38] #E2
 #exr = [29,30,31,32] #E3
 #exr = [29,30,31,32,35,36,37,38] #E4
-exr = []  #BC
+exr = [43]  #BC
 rxns = pyGRLoad(excludedReactions=exr)
-
+# print rxns
 #Environment
 pyge = pyGEnvironment(temp=1500)
 #Eamples for other F cases
@@ -51,7 +50,6 @@ pgss.run(endTime=0.005,nOpt=15,saveSims=True)
 
 totalTime = time.time() - startTime
 print 'Total time: ', totalTime/60., ' minutes'
-
 #Write out pgss variable
 pgss.save()
 
@@ -64,10 +62,28 @@ gr = pgss.calcGrowthRate(nAvgSteps=None)
 fr5 = pgss.calcFR5()
 plt.savefig(simName+'_growth')
 plt.clf()
-plt.semilogy(pgss.t_bins,gr,pgss.t_bins,gr)
+# plt.semilogy(pgss.t_bins,gr,pgss.t_bins,gr)
+total_num=0
+tmp_sum_gr=0
+for (index, tmp_gr) in enumerate(gr):
+	if not numpy.isnan(tmp_gr):
+		tmp_sum_gr+=tmp_gr
+		total_num+=1
+
+mean_gr=tmp_sum_gr/float(total_num)
+array_mean_gr=deepcopy(pgss.t_bins)
+for i in range(len(array_mean_gr)):
+	array_mean_gr[i]=mean_gr
+
+# print array_mean_gr
+plt.semilogy(pgss.t_bins,gr,'g')
+# print len(pgss.t_bins),len(array_mean_gr)
+plt.semilogy(pgss.t_bins,array_mean_gr,'r')
+# print pgss.t_bins,gr
 plt.savefig(simName+'_growth_rate')
 plt.clf()
 plt.plot(pgss.t_bins,fr5)
 plt.savefig(simName+'_fr5')
-
+# pgss.plotRxnBar()
+# plt.show
 print 'Done.'

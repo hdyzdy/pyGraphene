@@ -12,10 +12,15 @@ from pyGEnvironment import pyGEnvironment
 from pyGReaction import pyGReaction
 
 class pyGNetwork:
+    # tmporarily modification for the CAHM addition
+    # nCCAHM = 0
+
     def __init__(self,cyclic=0,cyclicBoundary=[-float('inf'),float('inf')],nRings=4,baseType='linear'):
         self.cyclic=cyclic
         self.cyclicBoundary=cyclicBoundary
         self.lastOpt = 0
+        # tmporarily modification for the CAHM addition
+        self.nCCAHM = 0
         if baseType == 'pc':
             self.makePCSubstrate(nRings)
             self.isPlanar = 1
@@ -113,7 +118,7 @@ class pyGNetwork:
         plt.figure()
         plotDict = {'A1H':'ko','A2H':'bo','A1-':'ro','A2-':'go',
                     'S1':'ks','S2':'bs','A1C2H':'bD','A2C2H':'kD',
-                    'A2H2':'mo','S1solid':'rs'}
+                    'A2H2':'mo','S1solid':'rs','A1C2H3':'yo'}
         xmin = -1
         xmax = 5
         ymin = -1.5
@@ -147,6 +152,7 @@ class pyGNetwork:
             Xa = nodeA.pos[0]; Ya = nodeA.pos[1]
             Xb = nodeB.pos[0]; Yb = nodeB.pos[1]
             plt.plot([Xa,Xb],[Ya,Yb],'--r')
+
         plt.axis([xmin,xmax,ymin,ymax])
 
     def plot3d(self,labels=True):
@@ -213,12 +219,20 @@ class pyGNetwork:
         else: outF = open(filename,'w')
         outF.write(str(self.nC)+'\n') #Number of atoms in spec
         if not tinker: outF.write(title+'\n')  #Title line (not used in tinker file)
+        print '\n\n\n\ni am here!!!!\n'
+        self.plot()
+        plt.show()
+        print '\n\n\n\n\n\nhey\n\n\n\n'
         for k in range(self.nC):
             if tinker:
+                continue
                 if len(self.nodes[k].cns) == 2:
                     outF.write('{0:d} C {1[0]:.3g} {1[1]:.3g} {1[2]:.3g} 2 {2[0]:d} {2[1]:d}\n'\
                                .format(k+1,self.nodes[k].pos,[x+1 for x in self.nodes[k].cns]))
-                else:
+                elif len(self.nodes[k].cns) == 1:
+                    outF.write('{0:d} C {1[0]:.3g} {1[1]:.3g} {1[2]:.3g} 2 {2[0]:d}\n'\
+                               .format(k+1,self.nodes[k].pos,[x+1 for x in self.nodes[k].cns]))
+                else:                    
                     outF.write('{0:d} C {1[0]:.3g} {1[1]:.3g} {1[2]:.3g} 2 {2[0]:d} {2[1]:d} {2[2]:d}\n'\
                                .format(k+1,self.nodes[k].pos,[x+1 for x in self.nodes[k].cns]))
             else:
@@ -250,15 +264,19 @@ class pyGNetwork:
         keyF.close()
         mm3FileName = os.path.join(tempDir,'tinker_opt_mm3.prm')
         if sys.platform == 'win32':
-                os.system('copy "'+os.path.join(tinkerPath,'mm3.prm')+'" '+mm3FileName+' > NUL')
-                logFileName = os.path.join(tempDir,'tinker_opt.log')
-                tinkerStat = os.system('"'+os.path.join(tinkerPath,'optimize')+'" '+xyzFileName+' '+
-                               mm3FileName[:-4]+' '+str(eRMS)+' > '+logFileName)
+            print 'here1\n'
+            os.system('copy "'+os.path.join(tinkerPath,'mm3.prm')+'" '+mm3FileName+' > NUL')
+            logFileName = os.path.join(tempDir,'tinker_opt.log')
+            print '"'+os.path.join(tinkerPath,'optimize')+'" '+xyzFileName+' '+\
+                mm3FileName[:-4]+' '+str(eRMS)+' > '+logFileName
+            tinkerStat = os.system('"'+os.path.join(tinkerPath,'optimize')+'" '+xyzFileName+' '+
+                mm3FileName[:-4]+' '+str(eRMS)+' > '+logFileName)
         else:
-                os.system('cp '+os.path.join(tinkerPath,'mm3.prm')+' '+mm3FileName)
-                logFileName = os.path.join(tempDir,'tinker_opt.log')
-                tinkerStat = os.system(os.path.join(tinkerPath,'optimize')+' '+xyzFileName+' '+
-                               mm3FileName[:-4]+' '+str(eRMS)+' &> '+logFileName)
+            print 'hre2\n'
+            os.system('cp '+os.path.join(tinkerPath,'mm3.prm')+' '+mm3FileName)
+            logFileName = os.path.join(tempDir,'tinker_opt.log')
+            tinkerStat = os.system(os.path.join(tinkerPath,'optimize')+' '+xyzFileName+' '+
+                           mm3FileName[:-4]+' '+str(eRMS)+' &> '+logFileName)
         if tinkerStat != 0:
             print "TINKER returned non-zero status."
             print "Quitting."
@@ -355,15 +373,26 @@ class pyGNetwork:
                     self.edge.actives.append(k) 
             reClassNodes = range(len(self.edge.actives))
         else:
+            #print 'hi!'
+            #print kEdge
             i_0 = self.edge.nodes[kEdge]
             self.edge.str[kEdge] = self.nodes[i_0].type + self.nodes[i_0].ncn
             actIndex = self.edge.actives.index(kEdge)
-            reClassNodes = range(actIndex-3,actIndex+4) 
+            reClassNodes = range(actIndex-3,actIndex+4)
+            #print self.edge.actives
+            #print i_0   
+            #print actIndex
+            # print reClassNodes
+            # self.plot()
+
+            # plt.show()
         if len(self.edge.actives) < 6:
             raise ValueError('Edge to small for classification.')
         for k in reClassNodes:
             activesK = self.edge.actives[k]
             downStr = self.edge.str.circgetslice(self.edge.actives[k-3],activesK)
+            # print 'k\t',k,self.edge.actives[k-3]
+            # print downStr
             downStr.reverse()
             downStr = ''.join(downStr)
             upStr = ''.join(self.edge.str.circgetslice(activesK+1,self.edge.actives[k+3]+1))
@@ -421,14 +450,14 @@ class pyGNetwork:
         return siteDict
 
 if __name__ == '__main__':
-    pyGN = pyGNetwork(baseType='pc',nRings=4) 
+    pyGN = pyGNetwork(baseType='pc',nRings=7) 
     pyGN.toTinker()
-    #print pyGN.edge.nodes
+    print pyGN.nodes[5]
     #print pyGN.edge.idStrings
     #pyGN.classifyEdge()
 #    pyGN.toXYZ()
-    #print pyGN.edge.nodes
-    #print pyGN.edge.idStrings
+    print pyGN.edge.nodes
+    print pyGN.edge.idStrings
     pyGN.plot()
     plt.savefig('pgne.png')
     print 'Done.'
