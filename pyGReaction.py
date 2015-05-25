@@ -8,32 +8,6 @@ from pyGNode import pyGNode
 class pyGReaction:
     def __init__(self):
         pass
-    
-    def CAHM(self,pyGNe,kEdge,type0):
-        if (kEdge < 2): nTurned = 2
-        elif (kEdge > (pyGNe.edge.length-2) ): nTurned = -2
-        else: nTurned = 0
-        pyGNe.edge.turn(nTurned)
-        kEdge += nTurned
-        i_0 = pyGNe.edge.nodes[kEdge]
-        ip1 = pyGNe.edge.nodes[kEdge-1]
-        ip2 = pyGNe.edge.nodes[kEdge+1]
-        (pos1new, pos2new) = pyGNe.nodes[i_0].setCAHMpos( 
-                                pyGNe.nodes[ip1],
-                                pyGNe.nodes[ip2])
-        pyGNe.nodes.append(pyGNode(pos=pos1new,
-                                   cns=[i_0,pyGNe.nC+1],
-                                   ncn='H',type='C'))
-        pyGNe.nodes.append(pyGNode(pos=pos2new,
-                                   cns=[pyGNe.nC],
-                                   ncn='H2',type='C')) 
-        pyGNe.nodes[i_0].type = type0
-        pyGNe.nodes[i_0].ncn = 'C2H3' 
-        pyGNe.nodes[i_0].cns.append(pyGNe.nC)
-        
-        pyGNe.nC += 2
-        #pyGNe.edge.length += 2
-        return kEdge                       
     def adsorb6boat(self,pyGNe,kEdge,side,type0,type3):
         if (kEdge < 4 and side < 0): nTurned = 4
         elif (kEdge > (pyGNe.edge.length-5) and side > 0): nTurned = -4
@@ -1865,84 +1839,12 @@ class pyGR_CsR5mtCsR6(pyGReaction):
         #Assumed to be high to test affect.
         cOfCH3 = pyGEn.concOf('CH3')
         return 1.0e13*cOfCH3
-    
     def isApplicable(self,siteType):
         siteID = siteType.split('_')
         if (re.match(r'A2-',siteID[0]) and 
             (re.match(r'[AS]2',siteID[1]) or re.match(r'[AS]2',siteID[2]))):
             return True
         return False
-
-class pyGR_CsmtCsC2H3(pyGReaction):
-    #Dissertation Reaction 43
-    isStructural = True
-    number = 43
-    name = 'CsmtCsC2H3'
-    count = 0
-    def __init__(self):
-        pyGReaction.__init__(self)
-    def apply(self,pyGNe,kEdge):
-        pyGR_CsmtCsC2H3.count += 1
-        print 'haha', pyGR_CsmtCsC2H3.count
-        kEdge = self.CAHM(pyGNe,kEdge,'A1')
-        # kNode = pyGNe.edge.nodes[kEdge]     
-        pyGNe.classifyEdge()
-        # pyGNe.nCCAHM += 2
-        return kEdge
-    def rate(self,pyGEn):
-        print 'hahahaha'
-        T = pyGEn.temperature
-        rateDict = {1500:5.54E+05, 2000:2.78E+07}
-        cOfC2H2 = pyGEn.concOf('C2H2')
-        if T in rateDict:
-            rate = rateDict[T]
-        else:
-            #Interpolate (See JPC KMC Paper).
-            rate = 4.07*T**3.25*numpy.exp(-17865./T)*cOfC2H2
-        if T < 1500 or T > 2500:
-            print 'Using Arhennius fit outside fitted temperature range.'
-        return rate 
-    def isApplicable(self,siteType):
-        siteID = siteType.split('_')
-        if re.match(r'A1H',siteID[0]) and re.match(r'S1A1HS1',siteID[1]) and re.match(r'S1A1HS1',siteID[2]):
-        #and m1 == 1:
-            return True
-        return False
-# class pyGR_CsmtCsC2H3(pyGReaction):
-#     #Dissertation Reaction 43
-#     isStructural = False
-#     number = 43
-#     name = 'CsmtCsC2H3'
-#     count = 0
-#     def __init__(self):
-#         pyGReaction.__init__(self)
-#     def apply(self,pyGNe,kEdge):
-#         pyGR_CsmtCsC2H3.count += 1
-#         print 'haha', pyGR_CsmtCsC2H3.count
-#         kNode = pyGNe.edge.nodes[kEdge]
-#         pyGNe.nodes[kNode].ncn = 'C2H3'
-#         pyGNe.classifyEdge(kEdge=kEdge)
-#         pyGNe.nCCAHM += 2
-#         return kEdge
-#     def rate(self,pyGEn):
-#         print 'hahahaha'
-#         T = pyGEn.temperature
-#         rateDict = {1500:5.54E+05, 2000:2.78E+07}
-#         cOfC2H2 = pyGEn.concOf('C2H2')
-#         if T in rateDict:
-#             rate = rateDict[T]
-#         else:
-#             #Interpolate (See JPC KMC Paper).
-#             rate = 4.07*T**3.25*numpy.exp(-17865./T)*cOfC2H2
-#         if T < 1500 or T > 2500:
-#             print 'Using Arhennius fit outside fitted temperature range.'
-#         return rate 
-#     def isApplicable(self,siteType):
-#         siteID = siteType.split('_')
-#         if re.match(r'A1H',siteID[0]) and re.match(r'S1A1HS1',siteID[1]) and re.match(r'S1A1HS1',siteID[2]):
-#         #and m1 == 1:
-#             return True
-#         return False
 
 def pyGRLoad(excludedReactions=[],objList=dir()):
         reactions = []
@@ -1962,9 +1864,9 @@ if __name__ == '__main__':
     from pyGEnvironment import pyGEnvironment
     from pyGNetwork import pyGNetwork
     import matplotlib.pyplot as plt
-    env = pyGEnvironment(temp=1500)
+    env = pyGEnvironment(temp=2000)
 #    print pyGR_CstCsm().rate(env)
-    pyGNe = pyGNetwork(baseType='linear',nRings=7)
+    pyGNe = pyGNetwork(baseType='linear',nRings=5)
     rx1 = pyGR_CstCsm()
     rx2 = pyGR_CsmtCs()
     rx3 = pyGR_CsmtCsR5H()
@@ -2007,7 +1909,6 @@ if __name__ == '__main__':
     rx40 = pyGR_CsR6BtCsR6S()
     rx41 = pyGR_CsR5BtCsR5S()
     rx42 = pyGR_CsR5mtCsR6()
-    rx43 = pyGR_CsmtCsC2H3()
 
     reactions = pyGRLoad()
     rx_0 = reactions[0]
@@ -2015,22 +1916,20 @@ if __name__ == '__main__':
 #    for k in range(len(reactions)):
 #        print "{0} {name}  {1} {2}".format(reactions[k].number,reactions[k].rate(env),env.temperature,name=reactions[k].name)
 
-    #rx1.apply(pyGNe,7)
+    rx1.apply(pyGNe,7)
     #rx1.apply(pyGNe,10)
-    #rx4.apply(pyGNe,7)
+    rx3.apply(pyGNe,7)
     #print rx26.isApplicable(pyGNe.edge.idStrings[9])
-    rx43.apply(pyGNe,9)
-    # print pyGNe.edge.idStrings[7]
-
+    rx13.apply(pyGNe,9)
     #print rx23.isApplicable(pyGNe.edge.idStrings[11])
-    #rx10.apply(pyGNe,8)
-    #rx34.apply(pyGNe,8)
-    #rx10.apply(pyGNe,9)
-    #print rx42.isApplicable(pyGNe.edge.idStrings[9])
-    #rx42.apply(pyGNe,9)
-    # pyGNe.plot()
+    rx10.apply(pyGNe,8)
+    rx34.apply(pyGNe,8)
+    rx10.apply(pyGNe,9)
+    print rx42.isApplicable(pyGNe.edge.idStrings[9])
+    rx42.apply(pyGNe,9)
+    pyGNe.plot()
 
-    # plt.show()
+    plt.show()
     print 'Done.'
 
     
