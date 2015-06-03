@@ -10,21 +10,21 @@ import matplotlib
 # matplotlib.use('Agg')
 from pyGSimSet import *
 
-simName = 'pc7_BC_1500'
+simName = 'linear20_BC_1500'
 #The starting substrate
 #Change basetype and nrings as appropriate
-pgn = pyGNetwork(baseType='pc',nRings=7)
+pgn = pyGNetwork(baseType='linear',nRings=20)
 
 #Excluded reactions: numbers match those from JPC paper
 #exr = [14,15,16,17,18,19,20,22,29,30,31,32,33,34,35,36,37,38,39,41] #E1
 #exr = [35,36,37,38] #E2
 #exr = [29,30,31,32] #E3
 #exr = [29,30,31,32,35,36,37,38] #E4
-exr = []  #BC
+exr = [44]  #BC
 rxns = pyGRLoad(excludedReactions=exr)
 # print rxns
 #Environment
-pyge = pyGEnvironment(temp=2000)
+pyge = pyGEnvironment(temp=1500)
 #Eamples for other F cases
 #pyge = pyGEnvironment(temp=1500,xOfC2H2=0.01) #F1 1500 K
 #pyge = pyGEnvironment(temp=2000,xOfH2=0.01)   #F2 2000 K
@@ -46,7 +46,7 @@ startTime = time.time()  #Keep track of how long simulations take
 #first nOpt runs will be optimized with tinker the rest will not
 #if saveSims==True then simulation variables will be saved
 #if a run is optimized then an xyz file will be output for it
-pgss.run(endTime=0.005,nOpt=15,saveSims=True) 
+pgss.run(endTime=0.001,nOpt=15,saveSims=True) 
 
 totalTime = time.time() - startTime
 print 'Total time: ', totalTime/60., ' minutes'
@@ -84,6 +84,9 @@ plt.savefig(simName+'_growth_rate')
 plt.clf()
 plt.plot(pgss.t_bins,fr5)
 plt.savefig(simName+'_fr5')
-# pgss.plotRxnBar()
-# plt.show
+
+plt.clf()
+plt.savefig(simName+'_Rxn')
+pgss.plotRxnBar()
+plt.show
 print 'Done.'

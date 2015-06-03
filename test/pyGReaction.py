@@ -33,6 +33,27 @@ class pyGReaction:
         
         pyGNe.nC += 2
         #pyGNe.edge.length += 2
+        return kEdge
+
+    def CAHMrev(self,pyGNe,kEdge):
+        if (kEdge < 2): nTurned = 2
+        elif (kEdge > (pyGNe.edge.length-2) ): nTurned = -2
+        else: nTurned = 0
+        pyGNe.edge.turn(nTurned)
+        kEdge += nTurned
+        i_0 = pyGNe.edge.nodes[kEdge]
+        pyGNe.nodes[i_0].ncn = 'H'
+        pyGNe.nodes[i_0].type = 'A1'
+        pyGNe.nodes[i_0].cns_pd = sorted(pyGNe.nodes[i_0].cns)
+        kdelnode1 = pyGNe.nodes[i_0].cns_pd[2]
+        pyGNe.nodes[kdelnode1].cns_pd = sorted(pyGNe.nodes[kdelnode1].cns)
+        kdelnode2 = pyGNe.nodes[kdelnode1].cns_pd[1]
+
+        pyGNe.nodes[i_0].cns = pyGNe.nodes[i_0].cns_pd.pop()
+        pyGNe.removeNode(kdelnode1)
+        pyGNe.removeNode(kdelnode2)
+
+        pyGNe.nC -= 2
         return kEdge                       
     def adsorb6boat(self,pyGNe,kEdge,side,type0,type3):
         if (kEdge < 4 and side < 0): nTurned = 4
@@ -1888,65 +1909,45 @@ class pyGR_CsmtCsC2H3(pyGReaction):
     def apply(self,pyGNe,kEdge):
         pyGR_CsmtCsC2H3.count += 1
         # print 'haha', pyGR_CsmtCsC2H3.count
-        kEdge = self.CAHM(pyGNe,kEdge,'S1')
+        kEdge = self.CAHM(pyGNe,kEdge,'A1')
+        # kNode = pyGNe.edge.nodes[kEdge]     
+        pyGNe.classifyEdge()
+        return kEdge
+    def rate(self,pyGEn):
+        T = pyGEn.temperature
+        cOfC2H2 = pyGEn.concOf('C2H2')
+        coeff = 4.07*T**3.25*numpy.exp(-17865./T)
+        return coeff*cOfC2H2 
+    def isApplicable(self,siteType):
+        siteID = siteType.split('_')
+        if re.match(r'A1H',siteID[0]) and re.match(r'S1A1HS1',siteID[1]) and re.match(r'S1A1HS1',siteID[2]):
+            return True
+        return False
+
+class pyGR_CsmtCsC2H3rev(pyGReaction):
+    #Dissertation Reaction 44
+    isStructural = True
+    number = 44
+    name = 'pyGR_CsmtCsC2H3rev'
+    count = 0
+    def __init__(self):
+        pyGReaction.__init__(self)
+    def apply(self,pyGNe,kEdge):
+        pyGR_CsmtCsC2H3.count += 1
+        kEdge = self.CAHMrev(pyGNe,kEdge)
         # kNode = pyGNe.edge.nodes[kEdge]     
         pyGNe.classifyEdge()
         # pyGNe.nCCAHM += 2
         return kEdge
     def rate(self,pyGEn):
-        # print 'hahahaha'
         T = pyGEn.temperature
-        rateDict = {1500:5.54E+05, 2000:2.78E+07}
-        cOfC2H2 = pyGEn.concOf('C2H2')
-        if T in rateDict:
-            rate = rateDict[T]
-        else:
-            #Interpolate (See JPC KMC Paper).
-            rate = 4.07*T**3.25*numpy.exp(-17865./T)*cOfC2H2
-        if T < 1500 or T > 2500:
-            print 'Using Arhennius fit outside fitted temperature range.'
-        return rate 
+        rate = 3.449e11*T**0.538*numpy.exp(-36470./T)
+        return rate
     def isApplicable(self,siteType):
-        siteID = siteType.split('_')
-        if re.match(r'A1H',siteID[0]) and re.match(r'S1A1HS1',siteID[1]) and re.match(r'S1A1HS1',siteID[2]):
-        #and m1 == 1:
+    	siteID = siteType.split('_')
+        if re.match(r'A1C2H3',siteID[0]):
             return True
         return False
-# class pyGR_CsmtCsC2H3(pyGReaction):
-#     #Dissertation Reaction 43
-#     isStructural = False
-#     number = 43
-#     name = 'CsmtCsC2H3'
-#     count = 0
-#     def __init__(self):
-#         pyGReaction.__init__(self)
-#     def apply(self,pyGNe,kEdge):
-#         pyGR_CsmtCsC2H3.count += 1
-#         print 'haha', pyGR_CsmtCsC2H3.count
-#         kNode = pyGNe.edge.nodes[kEdge]
-#         pyGNe.nodes[kNode].ncn = 'C2H3'
-#         pyGNe.classifyEdge(kEdge=kEdge)
-#         pyGNe.nCCAHM += 2
-#         return kEdge
-#     def rate(self,pyGEn):
-#         print 'hahahaha'
-#         T = pyGEn.temperature
-#         rateDict = {1500:5.54E+05, 2000:2.78E+07}
-#         cOfC2H2 = pyGEn.concOf('C2H2')
-#         if T in rateDict:
-#             rate = rateDict[T]
-#         else:
-#             #Interpolate (See JPC KMC Paper).
-#             rate = 4.07*T**3.25*numpy.exp(-17865./T)*cOfC2H2
-#         if T < 1500 or T > 2500:
-#             print 'Using Arhennius fit outside fitted temperature range.'
-#         return rate 
-#     def isApplicable(self,siteType):
-#         siteID = siteType.split('_')
-#         if re.match(r'A1H',siteID[0]) and re.match(r'S1A1HS1',siteID[1]) and re.match(r'S1A1HS1',siteID[2]):
-#         #and m1 == 1:
-#             return True
-#         return False
 
 def pyGRLoad(excludedReactions=[],objList=dir()):
         reactions = []

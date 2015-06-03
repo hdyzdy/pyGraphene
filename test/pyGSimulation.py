@@ -39,7 +39,6 @@ class pyGSimulation():
         #Determine where we are in the specified Time/Species conc history
         #and update environment
         if len(self.time) > 1:
-            #print "branch1 self.time",self.time
             for m in range(len(self.t_env)):
                 if self.time[-2] >= self.t_env[m]:
                     kEnvOld = m
@@ -90,7 +89,7 @@ class pyGSimulation():
                         # if self.reactions[m].isApplicable(idStr):
                         #        applicableReactions.append(m)
 
-                        if self.reactions[m].number != 43:
+                        if (self.reactions[m].number != 43) and (self.reactions[m].number != 44):
                             if self.reactions[m].isApplicable(idStr):
                                applicableReactions.append(m)
                         #        print applicableReactions
